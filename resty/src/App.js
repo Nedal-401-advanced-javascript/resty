@@ -16,18 +16,14 @@ class Main extends React.Component{
   handleUrlInput=e=>{
     let url = e.target.value;
     this.setState({url})
-    // console.log(this.url);
   }
   handleClick=e=>{
     e.preventDefault()
     let choices = `${this.state.method} ${this.state.url}`;
     this.setState({ choices: [...this.state.choices, choices] })
     this.state.choices.push(choices)
-    // this.setState({choices})
-    // console.log(this.choices);
   }
   handleMethod=e=>{
-  // console.log(this.method);
   let method= e.target.value;
   this.setState({method});
   console.log(this.state.method);
