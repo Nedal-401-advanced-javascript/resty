@@ -2,6 +2,9 @@
 import React from 'react';
 import superagent from 'superagent';
 import './form.scss'
+import History from '../history/history'
+import {If, Then, Else} from '../IF/if';
+
 
 class Form extends React.Component{
     constructor(props){
@@ -9,7 +12,9 @@ class Form extends React.Component{
       this.state={
         url:'',
         method:'get',
-        choices:[]
+        choices:[],
+        loading: false,
+        open: false
   
       }
     }
@@ -19,12 +24,14 @@ class Form extends React.Component{
     }
     handleClick=async(e)=>{
       e.preventDefault()
+      this.toggleLoading();
+
       let reqMethod=this.state.method 
-      let choices = `${reqMethod} ${this.state.url}`;
+      let choices = `${reqMethod}:${this.state.url}`;
       this.setState({ choices: [...this.state.choices, choices] })
       // console.log(this.state)
       this.state.choices.push(choices)
-      let jsonData;
+      let jsonData; 
       switch (reqMethod) {
         case 'delete':
            jsonData= await superagent.del(`${this.state.url}`)
@@ -43,42 +50,78 @@ class Form extends React.Component{
       let count = jsonData.body.count; 
       this.props.handelResult(count,jsonData.body)
       // store the query parameters in local storage
-      localStorage.setItem('req',JSON.stringify({
+      localStorage.setItem(`${choices}`,JSON.stringify({
         method:this.state.method,
         URL:this.state.url,
         body:jsonData.body
       }));
+      this.toggleLoading();
 
     }
     handleMethod=e=>{
-    let method= e.target.value;
-    this.setState({method});
-    console.log(this.state.method);
-  
+      let method= e.target.value;
+      this.setState({method});
+      console.log(this.state.method);
     }
+
+    handleHistory=e=>{
+      e.preventDefault()
+
+      // this.toggleLoading();
+
+      console.log('result of the event : ',e.target.textContent);
+      let storedRequst = JSON.parse(localStorage.getItem(`${e.target.textContent}`));
+      console.log("storedRequst : ",storedRequst);
+      this.props.handelResult(storedRequst.body.count,storedRequst.body)
+      // this.toggleLoading();
+
+    }
+    toggleModal = () => {
+      this.setState({open: !this.state.open});
+  }
+  toggleLoading = () => {
+    this.setState({loading: !this.state.loading})
+}
   
     render(){
-    return(
-    <section>
-        <form>
-          <label  for="fname">URL</label>
-          <input onChange={this.handleUrlInput} type="text" id="fname" name="fname"/>
-          <button onClick={this.handleClick}>GO</button><br/>
-  
-          <input onChange={this.handleMethod} type="radio" name="method" value="get" checked="checked"/>
-          <label for="get">get</label>
-          <input onChange={this.handleMethod} type="radio" name="method" value="post"/>
-          <label for="post">post</label>
-          <input onChange={this.handleMethod} type="radio" name="method" value="put"/>
-          <label for="put">put</label>
-          <input onChange={this.handleMethod} type="radio" name="method" value="delete"/>
-          <label for="delete">delete</label>
-       </form>
-  
-       <h3>{this.state.choices}</h3>
-    </section> 
-  
-    )
+      let historyList= this.state.choices.map((req,i)=><li onClick={this.handleHistory} id={i}>{req}</li>)
+      return(
+        <section>
+              <form>
+                  <label  for="fname">URL</label>
+                  <input onChange={this.handleUrlInput} type="text" id="fname" name="fname"/>
+                  <button onClick={this.handleClick}>GO</button><br/>
+          
+                  <input onChange={this.handleMethod} type="radio" name="method" value="get" checked="checked"/>
+                  <label for="get">get</label>
+                  <input onChange={this.handleMethod} type="radio" name="method" value="post"/>
+                  <label for="post">post</label>
+                  <input onChange={this.handleMethod} type="radio" name="method" value="put"/>
+                  <label for="put">put</label>
+                  <input onChange={this.handleMethod} type="radio" name="method" value="delete"/>
+                  <label for="delete">delete</label>
+            </form>
+            <div className={`loading-${this.state.loading}`}></div>
+
+            <h3>{this.state.choices}</h3>
+          <aside>
+            <If condition={this.state.open}>
+            <Then>
+                <History title="History Modal" close={this.toggleModal}>
+                <button onClick={this.toggleModal}>/\</button>
+                {historyList}
+                </History>
+            </Then>
+            <Else>
+                <button onClick={this.toggleModal}>Open History!! </button>
+            </Else>
+            </If>
+
+          </aside>
+
+        </section> 
+    
+      )
     }
   }
 
