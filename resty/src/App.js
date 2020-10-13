@@ -18,9 +18,12 @@ class App extends React.Component {
   }
 
   updateResult=(count,results)=>{
-    console.log(results);
     this.setState({count,results})
-console.log(this.state.count, this.state.results);
+// Store the URL, Method, and the Body (if any)
+
+
+
+// Store only unique, successful queries
   }
 
   render() {

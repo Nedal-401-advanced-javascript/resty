@@ -1,5 +1,6 @@
 'use strict';
 import React from 'react';
+import superagent from 'superagent';
 import './form.scss'
 
 class Form extends React.Component{
@@ -7,7 +8,7 @@ class Form extends React.Component{
       super(props);
       this.state={
         url:'',
-        method:'',
+        method:'get',
         choices:[]
   
       }
@@ -18,15 +19,35 @@ class Form extends React.Component{
     }
     handleClick=async(e)=>{
       e.preventDefault()
-      let choices = `${this.state.method} ${this.state.url}`;
+      let reqMethod=this.state.method 
+      let choices = `${reqMethod} ${this.state.url}`;
       this.setState({ choices: [...this.state.choices, choices] })
+      // console.log(this.state)
       this.state.choices.push(choices)
-      let data = await fetch(`${this.state.url}`)
-      let jsonData=await data.json()
+      let jsonData;
+      switch (reqMethod) {
+        case 'delete':
+           jsonData= await superagent.del(`${this.state.url}`)
+          break;
+        case 'post':
+          jsonData= await superagent.post(`${this.state.url}`);
+          break;
+        case 'put':
+          jsonData= await superagent.put(`${this.state.url}`);
+          break;
+        default:jsonData= await superagent.get(`${this.state.url}`)
+          break;
+      }
+      
 
-      let count = jsonData.count; 
-
-      this.props.handelResult(count,jsonData)
+      let count = jsonData.body.count; 
+      this.props.handelResult(count,jsonData.body)
+      // store the query parameters in local storage
+      localStorage.setItem('req',JSON.stringify({
+        method:this.state.method,
+        URL:this.state.url,
+        body:jsonData.body
+      }));
 
     }
     handleMethod=e=>{
