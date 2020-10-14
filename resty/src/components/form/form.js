@@ -12,6 +12,7 @@ class Form extends React.Component{
       this.state={
         url:'',
         method:'get',
+        body:null,
         choices:[],
         loading: false,
         open: false
@@ -22,6 +23,7 @@ class Form extends React.Component{
       let url = e.target.value;
       this.setState({url})
     }
+    fillBody=e=>this.setState({body:e.target.value})
     handleClick=async(e)=>{
       e.preventDefault()
       this.toggleLoading();
@@ -29,7 +31,6 @@ class Form extends React.Component{
       let reqMethod=this.state.method 
       let choices = `${reqMethod}:${this.state.url}`;
       this.setState({ choices: [...this.state.choices, choices] })
-      // console.log(this.state)
       this.state.choices.push(choices)
       let jsonData; 
       switch (reqMethod) {
@@ -49,12 +50,17 @@ class Form extends React.Component{
 
       let count = jsonData.body.count; 
       this.props.handelResult(count,jsonData.body)
+
       // store the query parameters in local storage
-      localStorage.setItem(`${choices}`,JSON.stringify({
+      let historyLocalStorge=JSON.parse(localStorage.getItem(`history`))||[]
+      let historyObj={
+        id:Date.now(),
         method:this.state.method,
         URL:this.state.url,
         body:jsonData.body
-      }));
+      }
+      historyLocalStorge.push(historyObj)
+      localStorage.setItem(`history`,JSON.stringify(historyLocalStorge));
       this.toggleLoading();
 
     }
@@ -70,7 +76,7 @@ class Form extends React.Component{
       // this.toggleLoading();
 
       console.log('result of the event : ',e.target.textContent);
-      let storedRequst = JSON.parse(localStorage.getItem(`${e.target.textContent}`));
+      let storedRequst = JSON.parse(localStorage.getItem(`${e.target.value}`));
       console.log("storedRequst : ",storedRequst);
       this.props.handelResult(storedRequst.body.count,storedRequst.body)
       // this.toggleLoading();
@@ -84,14 +90,13 @@ class Form extends React.Component{
 }
   
     render(){
-      let historyList= this.state.choices.map((req,i)=><li onClick={this.handleHistory} id={i}>{req}</li>)
+      // let historyList= this.state.choices.map((req,i)=><li onClick={this.handleHistory} id={req.id}>{req}</li>)
       return(
         <section>
               <form>
                   <label  for="fname">URL</label>
                   <input onChange={this.handleUrlInput} type="text" id="fname" name="fname"/>
                   <button onClick={this.handleClick}>GO</button><br/>
-          
                   <input onChange={this.handleMethod} type="radio" name="method" value="get" checked="checked"/>
                   <label for="get">get</label>
                   <input onChange={this.handleMethod} type="radio" name="method" value="post"/>
@@ -99,7 +104,8 @@ class Form extends React.Component{
                   <input onChange={this.handleMethod} type="radio" name="method" value="put"/>
                   <label for="put">put</label>
                   <input onChange={this.handleMethod} type="radio" name="method" value="delete"/>
-                  <label for="delete">delete</label>
+                  <label for="delete">delete</label><br/>
+                  <textarea onChange={this.fillBody} rows="4" cols="50"></textarea>
             </form>
             <div className={`loading-${this.state.loading}`}></div>
 
@@ -109,7 +115,6 @@ class Form extends React.Component{
             <Then>
                 <History title="History Modal" close={this.toggleModal}>
                 <button onClick={this.toggleModal}>/\</button>
-                {historyList}
                 </History>
             </Then>
             <Else>
